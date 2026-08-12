@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source_link="$HOME/.config/hypr/plugins/agent-desktops"
+if [[ ! -d $source_link ]]; then
+  printf 'agent-desktops: plug-in source is not installed: %s\n' "$source_link" >&2
+  exit 1
+fi
+# Follow the package-level development symlink before find hashes the source.
+# Internal source links remain visible and are not part of a normal package.
+source_dir=$(cd -P -- "$source_link" && pwd)
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/omarchy/agent-desktops"
+cache_root="${XDG_CACHE_HOME:-$HOME/.cache}/hyprland-agent-desktops"
+command_path="$HOME/.config/quickshell/scripts/omarchy-agent-desktop"
+
+mkdir -p "$state_dir" "$cache_root"
+exec 9>"$state_dir/start.lock"
+flock 9
+
+for command_name in Hyprland cmake ninja pkg-config jq hyprctl; do
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    printf 'agent-desktops: required command is not installed: %s\n' "$command_name" >&2
+    exit 1
+  fi
+done
+
+abi=$(Hyprland --version-json | jq -r '.abiHash // empty')
+hyprland_version=$(Hyprland --version-json | jq -r '.version // empty')
+headers_version=$(pkg-config --modversion hyprland)
+if [[ -z $abi || ! $abi =~ ^[A-Za-z0-9._-]+$ ]]; then
+  echo "agent-desktops: could not read the Hyprland ABI" >&2
+  exit 1
+fi
+if [[ -z $hyprland_version || $headers_version != "$hyprland_version" ]]; then
+  printf 'agent-desktops: Hyprland is %s, but the headers are %s\n' \
+    "${hyprland_version:-unknown}" "${headers_version:-unknown}" >&2
+  exit 1
+fi
+
+source_hash=$(
+  {
+    printf '%s\0' "$source_dir/CMakeLists.txt"
+    find "$source_dir/src" -type f \( -name '*.cpp' -o -name '*.hpp' \) -print0 | sort -z
+  } | xargs -0 sha256sum | sha256sum | cut -d' ' -f1
+)
+build_dir="$cache_root/${abi}_${source_hash}"
+plugin="$build_dir/agent-desktops.so"
+active_file="$state_dir/active-plugin"
+
+if [[ ! -f $plugin ]]; then
+  cmake -S "$source_dir" -B "$build_dir" -G Ninja -DCMAKE_BUILD_TYPE=Release
+  cmake --build "$build_dir"
+fi
+
+loaded_plugin=""
+[[ -f $active_file ]] && loaded_plugin=$(<"$active_file")
+
+if hyprctl plugin list 2>/dev/null | grep -q '^Plugin agent-desktops-v3 '; then
+  if [[ $loaded_plugin != "$plugin" ]]; then
+    echo "agent-desktops: restart Hyprland to activate the updated plug-in" >&2
+    exit 1
+  fi
+else
+  load_output=$(hyprctl plugin load "$plugin")
+  if [[ $load_output != "ok" ]]; then
+    printf '%s\n' "$load_output" >&2
+    exit 1
+  fi
+fi
+printf '%s\n' "$plugin" >"$active_file"
+
+if [[ -x $command_path ]]; then
+  "$command_path" restore
+fi

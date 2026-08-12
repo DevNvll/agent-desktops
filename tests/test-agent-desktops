@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+repository=$(cd -- "$(dirname -- "$script_path")/.." && pwd)
+
+python3 "$repository/tests/test_agent_desktops.py"
+node "$repository/omarchy/nullskies.agent-desktops/Model.test.js"
+python3 "$repository/tests/validate_manifest.py"

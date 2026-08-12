@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# omarchy:summary=Manage isolated desktops for GUI automation agents
+# omarchy:group=system
+# omarchy:args=<create|list|run|windows|adopt|screenshot|key|enter|leave|remove|restore>
+
+set -euo pipefail
+
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+script_dir=$(cd -- "$(dirname -- "$script_path")" && pwd)
+exec python3 "$script_dir/../libexec/agent_desktops.py" "$@"

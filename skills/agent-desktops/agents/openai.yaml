@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Desktops"
+  short_description: "Run windowed processes on isolated desktops"
+  default_prompt: "Use $agent-desktops to start and inspect this windowed process without changing my active desktop."

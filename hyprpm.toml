@@ -1,0 +1,13 @@
+[repository]
+name = "agent-desktops"
+authors = ["nullskies"]
+commit_pins = []
+
+[agent-desktops]
+description = "Isolated headless workspaces for GUI automation agents"
+authors = ["nullskies"]
+output = "build/agent-desktops.so"
+build = [
+  "cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release",
+  "cmake --build build",
+]
