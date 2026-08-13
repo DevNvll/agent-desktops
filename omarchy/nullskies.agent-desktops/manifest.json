@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "nullskies.agent-desktops",
   "name": "Agent Desktops",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "nullskies",
   "description": "Manage active isolated Hyprland desktops for GUI automation agents.",
   "kinds": [

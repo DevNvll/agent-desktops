@@ -1,6 +1,6 @@
 ---
 name: agent-desktops
-description: Run window-creating processes on isolated Hyprland desktops, then inspect, control, capture, and close their windows without changing the user's active desktop. Use whenever an agent must start a command that opens or can spawn a GUI window, including Electron, browsers, QEMU, emulators, GUI tests, launchers, xdg-open, and Bun, npm, pnpm, or other development commands that start desktop windows. Skip this skill only when the user explicitly asks for the process or window to open normally on the active or main desktop.
+description: Run processes on isolated Hyprland virtual desktops, then inspect, control, capture, and close their windows without changing the user's active desktop. Use this skill only when the user explicitly asks to use a virtual desktop, agent desktop, headless workspace, isolated Hyprland desktop, or the agent-desktops skill. Do not trigger it only because a command can create a GUI window.
 ---
 
 # Agent Desktops
@@ -9,14 +9,13 @@ Run windowed processes on named headless outputs. Keep the user's active desktop
 
 Read [command-reference.md](references/command-reference.md) for full command syntax, state fields, launch limits, recovery, and cleanup details.
 
-## Default launch policy
+## Explicit use policy
 
-- Use this skill before you start any process that is expected, intended, or reasonably able to create a window.
-- Include direct GUI programs and indirect launchers. Examples include `electron`, `qemu-system-*`, browsers, emulators, file viewers, GUI test runners, `xdg-open`, and development scripts that start Electron, Tauri, a browser, or another desktop application.
-- Use it for `bun run dev`, `npm run dev`, `pnpm dev`, or similar commands when the script can open a window.
-- Do not use it for a terminal-only process that cannot create a window.
-- Skip isolation only when the user clearly asks to open the window normally, on the main desktop, or on the active desktop. A request to “open,” “run,” “test,” or “start” an application is not by itself a request for a normal desktop launch.
-- Do not replace an isolated launch with a normal launch because isolation is less convenient. Explain a real limitation if one blocks the requested work.
+- Use this skill only after the user explicitly requests a virtual desktop, agent desktop, headless workspace, isolated Hyprland desktop, or this skill by name.
+- Do not infer consent from a command that can create a window. Electron, QEMU, browsers, GUI tests, `xdg-open`, and Bun, npm, or pnpm development commands do not trigger this skill by themselves.
+- Treat a normal request to open, run, test, or start an application as a normal active-desktop request.
+- After explicit use, route the complete requested process tree through the virtual desktop unless the user changes the request.
+- Explain a real limitation if isolation cannot complete the requested work. Do not silently use the active desktop as a fallback.
 
 ## Main workflow
 
@@ -148,6 +147,8 @@ omarchy-agent-desktop leave "$desktop_id"
 ```
 
 The Omarchy bar icon gives enter, leave, screenshot, and remove controls. It is on the left beside the normal workspace buttons. It is hidden when no live agent desktop exists. The widget does not create desktops. A person who clicks its screenshot button also copies the PNG to the clipboard.
+
+Each headless output has a lightweight Omarchy bar for screenshots. It shows the desktop label, time, window count, and headless state. It does not load the complete physical-monitor widget tree or start per-output commands.
 
 ## Recovery
 

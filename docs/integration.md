@@ -40,7 +40,7 @@ Use `bind_human_special` for normal special-workspace bindings. These helpers al
 
 ## Filter Quickshell surfaces
 
-Do not create the normal bar, bar drag surfaces, notification surfaces, or general desktop control surfaces on an `AGENT-*` screen. Filter `Quickshell.screens` before each related `Variants` object:
+Do not create the normal full bar, bar drag surfaces, notification surfaces, or general desktop control surfaces on an `AGENT-*` screen. Filter `Quickshell.screens` before each related `Variants` object:
 
 ```qml
 readonly property var physicalScreens: {
@@ -55,6 +55,54 @@ readonly property var physicalScreens: {
 ```
 
 Use `physicalScreens` as the model for all normal bar and notification output variants. Keep the lock surface on all outputs for security. A background surface can remain on the headless output so screenshots have a background.
+
+Also make an `agentScreens` list with the inverse name test. Load the plug-in's `AgentBar.qml` once for each agent screen. Give it the main bar object, the shared `nullskies.agent-desktops` service, and the target screen:
+
+```qml
+readonly property var agentScreens: {
+  var result = []
+  var screens = Quickshell.screens || []
+  for (var i = 0; i < screens.length; i++) {
+    var screen = screens[i]
+    if (screen && String(screen.name || "").startsWith("AGENT-")) result.push(screen)
+  }
+  return result
+}
+
+readonly property string agentBarSource: Util.fileUrl(
+  root.home + "/.config/omarchy/plugins/nullskies.agent-desktops/AgentBar.qml")
+readonly property var agentDesktopService: root.shell && typeof root.shell.serviceFor === "function"
+  ? root.shell.serviceFor("nullskies.agent-desktops") : null
+
+Variants {
+  model: root.agentScreens
+
+  delegate: Component {
+    Loader {
+      id: agentBarLoader
+      required property var modelData
+      source: root.agentBarSource
+
+      function injectProperties() {
+        if (!item) return
+        item.hostBar = root
+        item.desktopService = root.agentDesktopService
+        item.targetScreen = modelData
+      }
+
+      onLoaded: injectProperties()
+      onModelDataChanged: injectProperties()
+
+      Connections {
+        target: root
+        function onAgentDesktopServiceChanged() { agentBarLoader.injectProperties() }
+      }
+    }
+  }
+}
+```
+
+This lightweight bar shows the desktop label, clock, window count, and headless state. It starts no per-output process. Do not use the complete physical-monitor widget tree on an agent output.
 
 Guard bar workspace scrolling when the monitor shows a workspace whose name starts with `special:agent:`.
 
@@ -83,7 +131,7 @@ During a short test, confirm that:
 
 - The two physical monitor positions do not change.
 - The focused physical monitor does not change.
-- No normal bar or notification surface is created on `AGENT-0`.
+- A lightweight agent bar, not the complete normal widget tree, is created on `AGENT-0`.
 - The agent workspace does not appear in normal workspace navigation.
 - A file-only agent screenshot does not change the clipboard.
 - Removing the desktop returns the monitor list to its initial state.
