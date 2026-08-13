@@ -8,7 +8,8 @@ The repository contains:
 - A Hyprland Lua module for headless output rules and safe workspace navigation.
 - The `omarchy-agent-desktop` command for lifecycle, launch, capture, input, and cleanup.
 - An Omarchy Quickshell widget for manual access.
-- A Codex skill that makes isolated launch the default for window-creating commands.
+- A lightweight Omarchy bar for virtual desktop screenshots.
+- A context-based Codex skill for isolated launch workflows.
 
 The current build targets Hyprland 0.56.2. The loader rebuilds the native plug-in against the installed Hyprland ABI and matching development headers.
 
@@ -60,7 +61,7 @@ Agent screenshots write a file only. The clipboard option is reserved for a pers
 
 ## Agent policy
 
-Install the [agent-desktops skill](skills/agent-desktops/SKILL.md) to teach Codex the complete workflow. It tells agents to use an isolated desktop for every process that can create a window. It permits a normal active-desktop launch only when the user explicitly asks for it.
+Install the [agent-desktops skill](skills/agent-desktops/SKILL.md) to teach Codex the complete workflow. It uses an isolated desktop for independent development and validation that needs no user input. It uses a normal workspace when the user and agent are actively working together or when the user must see, control, review, or give feedback on the application. An explicit user request always takes priority.
 
 ## Validate
 

@@ -1,4 +1,7 @@
 interface:
   display_name: "Agent Desktops"
-  short_description: "Run windowed processes on isolated desktops"
-  default_prompt: "Use $agent-desktops to start and inspect this windowed process without changing my active desktop."
+  short_description: "Choose isolated desktops for independent work"
+  default_prompt: "Use $agent-desktops to choose the correct workspace for this windowed development task."
+
+policy:
+  allow_implicit_invocation: true

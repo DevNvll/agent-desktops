@@ -1,6 +1,6 @@
 ---
 name: agent-desktops
-description: Run window-creating processes on isolated Hyprland desktops, then inspect, control, capture, and close their windows without changing the user's active desktop. Use whenever an agent must start a command that opens or can spawn a GUI window, including Electron, browsers, QEMU, emulators, GUI tests, launchers, xdg-open, and Bun, npm, pnpm, or other development commands that start desktop windows. Skip this skill only when the user explicitly asks for the process or window to open normally on the active or main desktop.
+description: Run windowed processes on isolated Hyprland virtual desktops, then inspect, control, capture, and close them without changing the user's active desktop. Use when an agent is independently implementing or validating a feature, no user interaction or feedback is needed during that work, and a command will create GUI windows. Use normal workspaces when the user and agent are actively working together, the user must see or control the application, or feedback can change the work. Always follow an explicit user request for virtual or normal workspace use.
 ---
 
 # Agent Desktops
@@ -9,14 +9,22 @@ Run windowed processes on named headless outputs. Keep the user's active desktop
 
 Read [command-reference.md](references/command-reference.md) for full command syntax, state fields, launch limits, recovery, and cleanup details.
 
-## Default launch policy
+## Workspace choice
 
-- Use this skill before you start any process that is expected, intended, or reasonably able to create a window.
-- Include direct GUI programs and indirect launchers. Examples include `electron`, `qemu-system-*`, browsers, emulators, file viewers, GUI test runners, `xdg-open`, and development scripts that start Electron, Tauri, a browser, or another desktop application.
-- Use it for `bun run dev`, `npm run dev`, `pnpm dev`, or similar commands when the script can open a window.
-- Do not use it for a terminal-only process that cannot create a window.
-- Skip isolation only when the user clearly asks to open the window normally, on the main desktop, or on the active desktop. A request to “open,” “run,” “test,” or “start” an application is not by itself a request for a normal desktop launch.
-- Do not replace an isolated launch with a normal launch because isolation is less convenient. Explain a real limitation if one blocks the requested work.
+- Follow an explicit user request for a virtual desktop or a normal workspace.
+- Without an explicit request, use a virtual desktop only when all these conditions are true:
+  - Work on the feature independently without user input during the GUI session.
+  - Need no user sign-in, control, review, choice, or live feedback.
+  - Use the window only for background implementation, an automated test, a screenshot, or another result that the agent can check alone.
+- Use a normal workspace when any of these conditions is true:
+  - The user and agent are actively working on the feature together.
+  - The user is watching the application or is expected to interact with it.
+  - The user must review a visual change, compare options, sign in, enter data, or give feedback.
+  - The next development choice depends on what the user sees or says.
+- Do not use a virtual desktop only because Electron, QEMU, a browser, a GUI test, `xdg-open`, or a Bun, npm, or pnpm command can create a window.
+- If the work mode is not clear, use the normal workspace. Do not ask the user only to choose workspace routing.
+- Recheck the choice when the work mode changes. An independent test phase can use a virtual desktop after collaborative work. Return to a normal workspace before user review begins.
+- If isolation fails during an independent phase, explain the limit. Do not silently move the application to the active desktop.
 
 ## Main workflow
 
@@ -148,6 +156,8 @@ omarchy-agent-desktop leave "$desktop_id"
 ```
 
 The Omarchy bar icon gives enter, leave, screenshot, and remove controls. It is on the left beside the normal workspace buttons. It is hidden when no live agent desktop exists. The widget does not create desktops. A person who clicks its screenshot button also copies the PNG to the clipboard.
+
+Each headless output has a lightweight Omarchy bar for screenshots. It shows the desktop label, time, window count, and headless state. It does not load the complete physical-monitor widget tree or start per-output commands.
 
 ## Recovery
 
