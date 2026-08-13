@@ -1,6 +1,6 @@
 ---
 name: agent-desktops
-description: Run processes on isolated Hyprland virtual desktops, then inspect, control, capture, and close their windows without changing the user's active desktop. Use this skill only when the user explicitly asks to use a virtual desktop, agent desktop, headless workspace, isolated Hyprland desktop, or the agent-desktops skill. Do not trigger it only because a command can create a GUI window.
+description: Run windowed processes on isolated Hyprland virtual desktops, then inspect, control, capture, and close them without changing the user's active desktop. Use when an agent is independently implementing or validating a feature, no user interaction or feedback is needed during that work, and a command will create GUI windows. Use normal workspaces when the user and agent are actively working together, the user must see or control the application, or feedback can change the work. Always follow an explicit user request for virtual or normal workspace use.
 ---
 
 # Agent Desktops
@@ -9,13 +9,22 @@ Run windowed processes on named headless outputs. Keep the user's active desktop
 
 Read [command-reference.md](references/command-reference.md) for full command syntax, state fields, launch limits, recovery, and cleanup details.
 
-## Explicit use policy
+## Workspace choice
 
-- Use this skill only after the user explicitly requests a virtual desktop, agent desktop, headless workspace, isolated Hyprland desktop, or this skill by name.
-- Do not infer consent from a command that can create a window. Electron, QEMU, browsers, GUI tests, `xdg-open`, and Bun, npm, or pnpm development commands do not trigger this skill by themselves.
-- Treat a normal request to open, run, test, or start an application as a normal active-desktop request.
-- After explicit use, route the complete requested process tree through the virtual desktop unless the user changes the request.
-- Explain a real limitation if isolation cannot complete the requested work. Do not silently use the active desktop as a fallback.
+- Follow an explicit user request for a virtual desktop or a normal workspace.
+- Without an explicit request, use a virtual desktop only when all these conditions are true:
+  - Work on the feature independently without user input during the GUI session.
+  - Need no user sign-in, control, review, choice, or live feedback.
+  - Use the window only for background implementation, an automated test, a screenshot, or another result that the agent can check alone.
+- Use a normal workspace when any of these conditions is true:
+  - The user and agent are actively working on the feature together.
+  - The user is watching the application or is expected to interact with it.
+  - The user must review a visual change, compare options, sign in, enter data, or give feedback.
+  - The next development choice depends on what the user sees or says.
+- Do not use a virtual desktop only because Electron, QEMU, a browser, a GUI test, `xdg-open`, or a Bun, npm, or pnpm command can create a window.
+- If the work mode is not clear, use the normal workspace. Do not ask the user only to choose workspace routing.
+- Recheck the choice when the work mode changes. An independent test phase can use a virtual desktop after collaborative work. Return to a normal workspace before user review begins.
+- If isolation fails during an independent phase, explain the limit. Do not silently move the application to the active desktop.
 
 ## Main workflow
 
