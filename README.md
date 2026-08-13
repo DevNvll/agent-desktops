@@ -12,6 +12,11 @@ The repository contains:
 
 The current build targets Hyprland 0.56.2. The loader rebuilds the native plug-in against the installed Hyprland ABI and matching development headers.
 
+## Omarchy integration
+
+<img width="431" height="185" alt="image" src="https://github.com/user-attachments/assets/def74f10-7746-4e36-b912-5a28e35ecf02" />
+
+
 ## Install the package links
 
 Clone the repository, then run:
